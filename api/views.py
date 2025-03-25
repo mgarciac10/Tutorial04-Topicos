@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework import generics, permissions
-from .serializers import ToDoSerializer
+from .serializers import ToDoSerializer, ToDoToggleCompleteSerializer
 from todo.models import ToDo
 
 # Create your views here.
@@ -27,3 +27,16 @@ class ToDoRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         user = self.request.user
         # user can only update, delete own posts 
         return ToDo.objects.filter(user=user)
+
+class ToDoToggleComplete(generics.UpdateAPIView):
+    serializer_class = ToDoToggleCompleteSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+    def get_queryset(self):
+        user = self.request.user
+        return ToDo.objects.filter(user=user)
+    
+    def perform_update(self, serializer):
+        serializer.instance.completed = not(serializer.instance.completed)
+        serializer.save()
